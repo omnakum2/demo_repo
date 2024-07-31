@@ -1,0 +1,1 @@
+can we see data of qr code made using node js in google scanner chatgpt prompt
