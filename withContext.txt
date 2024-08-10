@@ -1,0 +1,127 @@
+1    -      // src/components/ProtectedRoute.js
+
+import React from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
+
+const ProtectedRoute = ({ element, requiredRole, isAuthenticated, userRole }) => {
+  const location = useLocation();
+
+  if (!isAuthenticated) {
+    // Redirect to login page if not authenticated
+    return <Navigate to="/login" state={{ from: location, message: 'You need to log in to access this page' }} />;
+  }
+
+  if (userRole !== requiredRole) {
+    // Redirect to login page if not authorized
+    return <Navigate to="/login" state={{ from: location, message: 'Access denied' }} />;
+  }
+
+  return element;
+};
+
+export default ProtectedRoute;
+
+
+2     -   // src/components/AdminLayout.js
+import React from 'react';
+import { Outlet } from 'react-router-dom';
+import Header from './admin/Header';
+
+const AdminLayout = () => {
+  return (
+    <div>
+      <Header />
+      <Outlet />
+    </div>
+  );
+};
+
+export default AdminLayout;
+
+
+3   -          // src/context/AuthContext.js
+import React, { createContext, useContext, useState } from 'react';
+
+const AuthContext = createContext();
+
+export const AuthProvider = ({ children }) => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userRole, setUserRole] = useState(null);
+
+  // You would set these values based on your authentication logic
+  // For example:
+  // setIsAuthenticated(true);
+  // setUserRole('admin');
+
+  return (
+    <AuthContext.Provider value={{ isAuthenticated, userRole }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => useContext(AuthContext);
+
+
+4          -              // src/App.js or src/Routes.js (depending on where you configure your routes)
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import AdminLayout from './components/AdminLayout';
+import Dashboard from './pages/admin/Dashboard';
+import Category from './pages/admin/Category';
+import AddCategory from './pages/admin/AddCategory';
+import UpdateCategory from './pages/admin/UpdateCategory';
+import Table from './pages/admin/Table';
+import AddTable from './pages/admin/AddTable';
+import UpdateTable from './pages/admin/UpdateTable';
+import Food from './pages/admin/Food';
+import AddFood from './pages/admin/AddFood';
+import UpdateFood from './pages/admin/UpdateFood';
+import Login from './pages/Login';
+import ProtectedRoute from './components/ProtectedRoute';
+
+const AppRoutes = () => {
+  const { isAuthenticated, userRole } = useAuth();
+
+  return (
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route path="admin" element={<ProtectedRoute element={<AdminLayout />} requiredRole="admin" isAuthenticated={isAuthenticated} userRole={userRole} />}>
+        <Route index element={<ProtectedRoute element={<Dashboard />} requiredRole="admin" isAuthenticated={isAuthenticated} userRole={userRole} />} />
+        <Route path="category" element={<ProtectedRoute element={<Category />} requiredRole="admin" isAuthenticated={isAuthenticated} userRole={userRole} />} />
+        <Route path="category-add" element={<ProtectedRoute element={<AddCategory />} requiredRole="admin" isAuthenticated={isAuthenticated} userRole={userRole} />} />
+        <Route path="category-edit/:id" element={<ProtectedRoute element={<UpdateCategory />} requiredRole="admin" isAuthenticated={isAuthenticated} userRole={userRole} />} />
+        <Route path="table" element={<ProtectedRoute element={<Table />} requiredRole="admin" isAuthenticated={isAuthenticated} userRole={userRole} />} />
+        <Route path="table-add" element={<ProtectedRoute element={<AddTable />} requiredRole="admin" isAuthenticated={isAuthenticated} userRole={userRole} />} />
+        <Route path="table-edit/:id" element={<ProtectedRoute element={<UpdateTable />} requiredRole="admin" isAuthenticated={isAuthenticated} userRole={userRole} />} />
+        <Route path="food" element={<ProtectedRoute element={<Food />} requiredRole="admin" isAuthenticated={isAuthenticated} userRole={userRole} />} />
+        <Route path="food-add" element={<ProtectedRoute element={<AddFood />} requiredRole="admin" isAuthenticated={isAuthenticated} userRole={userRole} />} />
+        <Route path="food-edit/:id" element={<ProtectedRoute element={<UpdateFood />} requiredRole="admin" isAuthenticated={isAuthenticated} userRole={userRole} />} />
+      </Route>
+    </Routes>
+  );
+};
+
+const App = () => (
+  <AuthProvider>
+    <Router>
+      <AppRoutes />
+    </Router>
+  </AuthProvider>
+);
+
+export default App;
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,115 @@
+1  -             // src/components/ProtectedRoute.js
+import React from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
+
+const ProtectedRoute = ({ element, requiredRole }) => {
+  const location = useLocation();
+
+  // Retrieve user role and authentication status from local storage
+  const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+  const userRole = localStorage.getItem('userRole');
+
+  if (!isAuthenticated) {
+    // Redirect to login page if not authenticated
+    return <Navigate to="/login" state={{ from: location, message: 'You need to log in to access this page' }} />;
+  }
+
+  if (userRole !== requiredRole) {
+    // Redirect to login page if not authorized
+    return <Navigate to="/login" state={{ from: location, message: 'Access denied' }} />;
+  }
+
+  return element;
+};
+
+export default ProtectedRoute;
+
+
+2      -                // src/App.js or src/Routes.js (depending on where you configure your routes)
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import AdminLayout from './components/AdminLayout';
+import Dashboard from './pages/admin/Dashboard';
+import Category from './pages/admin/Category';
+import AddCategory from './pages/admin/AddCategory';
+import UpdateCategory from './pages/admin/UpdateCategory';
+import Table from './pages/admin/Table';
+import AddTable from './pages/admin/AddTable';
+import UpdateTable from './pages/admin/UpdateTable';
+import Food from './pages/admin/Food';
+import AddFood from './pages/admin/AddFood';
+import UpdateFood from './pages/admin/UpdateFood';
+import Login from './pages/Login';
+import ProtectedRoute from './components/ProtectedRoute';
+
+const AppRoutes = () => (
+  <Routes>
+    <Route path="/login" element={<Login />} />
+    <Route path="admin" element={<ProtectedRoute element={<AdminLayout />} requiredRole="admin" />}>
+      <Route index element={<ProtectedRoute element={<Dashboard />} requiredRole="admin" />} />
+      <Route path="category" element={<ProtectedRoute element={<Category />} requiredRole="admin" />} />
+      <Route path="category-add" element={<ProtectedRoute element={<AddCategory />} requiredRole="admin" />} />
+      <Route path="category-edit/:id" element={<ProtectedRoute element={<UpdateCategory />} requiredRole="admin" />} />
+      <Route path="table" element={<ProtectedRoute element={<Table />} requiredRole="admin" />} />
+      <Route path="table-add" element={<ProtectedRoute element={<AddTable />} requiredRole="admin" />} />
+      <Route path="table-edit/:id" element={<ProtectedRoute element={<UpdateTable />} requiredRole="admin" />} />
+      <Route path="food" element={<ProtectedRoute element={<Food />} requiredRole="admin" />} />
+      <Route path="food-add" element={<ProtectedRoute element={<AddFood />} requiredRole="admin" />} />
+      <Route path="food-edit/:id" element={<ProtectedRoute element={<UpdateFood />} requiredRole="admin" />} />
+    </Route>
+  </Routes>
+);
+
+const App = () => (
+  <Router>
+    <AppRoutes />
+  </Router>
+);
+
+export default App;
+
+
+
+3          -                      // src/pages/Login.js
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+const Login = () => {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const navigate = useNavigate();
+
+  const handleLogin = () => {
+    // This is a simple example. In a real application, you should handle authentication via an API.
+    if (username === 'admin' && password === 'password') {
+      localStorage.setItem('isAuthenticated', 'true');
+      localStorage.setItem('userRole', 'admin');
+      navigate('/admin');
+    } else {
+      // Handle invalid login
+      alert('Invalid username or password');
+    }
+  };
+
+  return (
+    <div>
+      <h2>Login</h2>
+      <input
+        type="text"
+        placeholder="Username"
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
+      />
+      <input
+        type="password"
+        placeholder="Password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+      />
+      <button onClick={handleLogin}>Login</button>
+    </div>
+  );
+};
+
+export default Login;
+
